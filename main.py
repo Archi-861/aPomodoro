@@ -11,7 +11,7 @@ class PomodoroApp(ctk.CTk):
         self.title('aPomodoro')
         self.geometry('600x550')
 
-        self.timer_label = ctk.CTkLabel(self, text='25:00', font=('Helvetica', 48))
+        self.timer_label = ctk.CTkLabel(self, text='25:00', font=('Arial', 48))
         self.timer_label.pack(pady=20)
 
         self.start_button = ctk.CTkButton(self, text='START', command=self.start_timer)
@@ -24,6 +24,8 @@ class PomodoroApp(ctk.CTk):
         self.reset_button.pack(pady=5)
 
         self.seconds_left = 25 * 60
+        self.is_running = False
+        self.is_paused = False
 
     def start_timer(self):
         pass

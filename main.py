@@ -16,7 +16,31 @@ class NotificationManager:
 
 class TimerState:
     #управление состоянием таймера
-    pass
+    def __init__(self):
+        self.pomodoro_time = 25 * 60
+        self.short_break = 5 * 60
+        self.long_break = 15 * 60
+        self.current_time = self.pomodoro_time
+        self.is_running = False
+        self.is_pomodoro_mode = True
+        self.completed_pomodoros = 0
+        self.current_cycle = 0
+
+    def reset_to_pomodoro(self):
+
+        #Сброс к режиму ПОМОДОРО
+
+        self.current_time = self.pomodoro_time
+        self.is_pomodoro_mode = True
+
+    def reset_to_break(self, is_long_break = True):
+
+        #Сброс к режиму короткий/длинный перерыв
+
+        self.current_time = self.long_break if is_long_break else self.short_break
+        self.is_pomodoro_mode = False
+
+
 
 class PomodoroApp(ctk.CTk):
     def __init__(self):
@@ -36,9 +60,6 @@ class PomodoroApp(ctk.CTk):
         self.reset_button = ctk.CTkButton(self, text='STOP', command=self.stop_timer)
         self.reset_button.pack(pady=5)
 
-        self.seconds_left = 25 * 60
-        self.is_running = False
-        self.is_paused = False
 
     def start_timer(self):
         pass

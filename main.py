@@ -10,7 +10,40 @@ ctk.set_default_color_theme('blue')
 
 
 class Settings:
-    pass
+
+    def __init__(self):
+        self.settings_file = 'aPomodoro_settings.json'
+
+    def save_settings(self, timer_state):
+        try:
+            settings = {
+                'pomodoro' : timer_state.pomodoro_time,
+                'short_break' : timer_state.short_break,
+                'long_break' : timer_state.long_break
+            }
+            with open(self.settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, ensure_ascii=False, indent=2)
+            return True
+        except Exception as ex:
+            print(f'Error saving {ex}')
+            return False
+
+    def load_setting(self, timer_state):
+        if os.path.exists(self.settings_file):
+            try:
+                with open(self.settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    timer_state.pomodoro_time = settings.get('pomodoro', 25 * 60)
+                    timer_state.short_break = settings.get('short_break', 5 * 60)
+                    timer_state.long_break = settings.get('long_break', 15 * 60)
+                    timer_state.current_time = timer_state.pomodoro_time
+                return True
+            except Exception as ex:
+                print(f'Error loading {ex}')
+                return False
+        return False
+
+
 
 class Statistics:
 

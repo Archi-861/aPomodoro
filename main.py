@@ -59,6 +59,10 @@ class TimerState:
         self.reset_to_pomodoro()
         return 'Pomodoro'
 
+class TimerCore:
+    pass
+
+
 
 class PomodoroApp(ctk.CTk):
     def __init__(self):

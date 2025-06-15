@@ -40,6 +40,24 @@ class TimerState:
         self.current_time = self.long_break if is_long_break else self.short_break
         self.is_pomodoro_mode = False
 
+    def complete_pomodoro_period(self):
+
+        #Окончание циклов ПОМОДОРО
+
+        self.completed_pomodoros += 1
+        self.current_cycle += 1
+
+        if self.current_cycle >= 4:
+            self.current_cycle = 0
+            self.reset_to_break(is_long_break=True)
+            return 'Long break'
+        else:
+            self.reset_to_break()
+            return 'Short break'
+
+    def complete_break_period(self):
+        self.reset_to_pomodoro()
+        return 'Pomodoro'
 
 
 class PomodoroApp(ctk.CTk):

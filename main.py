@@ -1,7 +1,5 @@
 import json
 import os.path
-from os import times
-
 import customtkinter as ctk
 
 
@@ -74,6 +72,8 @@ class Statistics:
 
 class NotificationManager:
     pass
+
+
 
 class TimerState:
     #управление состоянием таймера
@@ -155,9 +155,34 @@ class TimerCore:
 
 
 
+class PomodoroTimer:
+    def __init__(self):
+        self.root = ctk.CTk()
+        self.root.title('aPomodoro')
+        self.root.geometry('500x450')
+
+        self.timer_state = TimerState()
+        self.settings = Settings()
+        self.stats = Statistics()
+
+        self.label = ctk.CTkLabel(self.root, text='00:00', font=ctk.CTkFont(size=48, weight='bold'))
+        self.label.pack(pady=20)
+
+        self.start_button = ctk.CTkButton(self.root, text='Start', command=self.start_timer)
+        self.start_button.pack(pady=10)
+
+        self.reset_button = ctk.CTkButton(self.root, text='Reset', command=self.reset_timer)
+        self.reset_button.pack(pady=5)
 
 
+    def start_timer(self):
+        pass
 
+    def reset_timer(self):
+        pass
+
+    def run(self):
+        self.root.mainloop()
 
 
 class PomodoroApp(ctk.CTk):
@@ -166,5 +191,5 @@ class PomodoroApp(ctk.CTk):
 
 
 
-app = PomodoroApp()
-app.mainloop()
+app = PomodoroTimer()
+app.run()

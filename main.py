@@ -1,3 +1,5 @@
+from os import times
+
 import customtkinter as ctk
 
 
@@ -59,38 +61,48 @@ class TimerState:
         self.reset_to_pomodoro()
         return 'Pomodoro'
 
+
+
 class TimerCore:
-    pass
+
+    def __init__(self, timer_state, notification_manager):
+        self.timer_state = timer_state
+        self.notification_manager = notification_manager
+        self.is_stop = False
+
+    def start(self):
+        if not self.timer_state.is_running:
+            self.timer_state.is_running = True
+            self.is_stop = False
+            return True
+        return False
+
+    def pause(self):
+        self.timer_state.is_running = False
+        self.is_stop = True
+
+    def reset(self):
+        self.pause()
+        if self.timer_state.is_pomodoro_period:
+            self.timer_state.current_time = self.timer_state.pomodoro_time
+        else:
+            if self.timer_state.current_cycle == 0:
+                self.timer_state.current_time = self.timer_state.long_break
+            else:
+                self.timer_state.current_time = self.timer_state.short_break
+
+    def run_timer(self):
+        initial_time = self.timer_state.current_time
+
+        
+
+
+
 
 
 
 class PomodoroApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.title('aPomodoro')
-        self.geometry('600x550')
-
-        self.timer_label = ctk.CTkLabel(self, text='25:00', font=('Arial', 48))
-        self.timer_label.pack(pady=20)
-
-        self.start_button = ctk.CTkButton(self, text='START', command=self.start_timer)
-        self.start_button.pack(pady=5)
-
-        self.pause_button = ctk.CTkButton(self, text='PAUSE', command=self.pause_timer)
-        self.pause_button.pack(pady=5)
-
-        self.reset_button = ctk.CTkButton(self, text='STOP', command=self.stop_timer)
-        self.reset_button.pack(pady=5)
-
-
-    def start_timer(self):
-        pass
-
-    def pause_timer(self):
-        pass
-
-    def stop_timer(self):
-        pass
+    pass
 
 
 

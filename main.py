@@ -5,6 +5,17 @@ ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme('blue')
 
 
+class Settings:
+    pass
+
+class Statistics:
+    pass
+
+class NotificationManager:
+    pass
+
+
+
 class PomodoroApp(ctk.CTk):
     def __init__(self):
         super().__init__()

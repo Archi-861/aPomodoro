@@ -1,3 +1,5 @@
+import json
+import os.path
 from os import times
 
 import customtkinter as ctk
@@ -11,7 +13,31 @@ class Settings:
     pass
 
 class Statistics:
-    pass
+
+    def __init__(self):
+        self.stats_file = 'aPomodoro_stats.json'
+
+
+    def save_completed_pomodoros(self):
+        stats = self.load_stats
+
+        with open(self.stats_file, 'w', encoding='utf-8') as f:
+            json.dump(stats, f, ensure_ascii=False, indent=2)
+
+
+    def load_stats(self):
+
+        if os.path.exists(self.stats_file):
+            try:
+                with open(self.stats_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return {k: int(v) for k, v in data.items() if str(v).isdigit()}
+            except Exception as ex:
+                print(f'Error loading {ex}')
+                return {}
+        return {}
+
+
 
 class NotificationManager:
     pass
@@ -94,7 +120,7 @@ class TimerCore:
     def run_timer(self):
         initial_time = self.timer_state.current_time
 
-        
+
 
 
 

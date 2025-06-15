@@ -14,7 +14,9 @@ class Statistics:
 class NotificationManager:
     pass
 
-
+class TimerState:
+    #управление состоянием таймера
+    pass
 
 class PomodoroApp(ctk.CTk):
     def __init__(self):

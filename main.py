@@ -140,12 +140,16 @@ class TimerCore:
     def start(self):
         if not self.timer_state.is_running:
             self.timer_state.is_running = True
+            self.next_action_tick()
             return True
         return False
 
     def pause(self):
         self.timer_state.is_running = False
-        self.is_stop = True
+        if self.timer_after:
+            self.root.after_cancel(self.timer_after)
+            self.timer_after = None
+
 
     def reset(self):
         self.pause()
@@ -188,13 +192,14 @@ class TimerCore:
     def run(self):
         initial_time = self.timer_state.current_time
 
-
+class UIResource:
+    pass
 
 class PomodoroTimer:
     def __init__(self):
         self.root = ctk.CTk()
         self.root.title('aPomodoro')
-        self.root.geometry('500x450')
+        self.root.geometry('500x600')
 
 
         self.timer_state = TimerState()

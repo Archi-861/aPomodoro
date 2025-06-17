@@ -1,5 +1,7 @@
 import json
 import os.path
+from sys import int_info
+
 import customtkinter as ctk
 
 
@@ -124,15 +126,20 @@ class TimerState:
 
 class TimerCore:
 
-    def __init__(self, timer_state, notification_manager):
+    def __init__(self, timer_state, notification_manager, update_callback, finish_callback, root):
         self.timer_state = timer_state
         self.notification_manager = notification_manager
-        self.is_stop = False
+
+        #Маркеры для GUI
+        self.update_callback = update_callback
+        self.finish_callback = finish_callback
+
+        self.root = root
+        self.timer_after = None
 
     def start(self):
         if not self.timer_state.is_running:
             self.timer_state.is_running = True
-            self.is_stop = False
             return True
         return False
 
@@ -150,7 +157,35 @@ class TimerCore:
             else:
                 self.timer_state.current_time = self.timer_state.short_break
 
-    def run_timer(self):
+
+
+    def next_action_tick(self):
+        if self.timer_state.is_running:
+            self.timer_after = self.root.after(1000, self.one_second_tick)
+
+    def one_second_tick(self):
+        if self.timer_state.is_running and self.timer_state.current_time > 0:
+            self.timer_state.current_time -= 1
+
+            if self.timer_state.is_pomodoro_period:
+                initial_time = self.timer_state.pomodoro_time
+            else:
+                if self.timer_state.current_cycle == 0:
+                    initial_time = self.timer_state.long_break
+                else:
+                    initial_time = self.timer_state.short_break
+            progress = self.timer_state.current_time / initial_time if initial_time > 0 else 0.0
+            self.update_callback(progress)
+
+            if self.timer_state.current_time > 0:
+                self.next_action_tick()
+            else:
+                self.timer_state.is_running = False
+                self.finish_callback()
+
+
+
+    def run(self):
         initial_time = self.timer_state.current_time
 
 
@@ -161,9 +196,15 @@ class PomodoroTimer:
         self.root.title('aPomodoro')
         self.root.geometry('500x450')
 
+
         self.timer_state = TimerState()
         self.settings = Settings()
         self.stats = Statistics()
+        self.notification_manager = NotificationManager()
+
+
+        self.timer_core = TimerCore(self.timer_state, self.notification_manager)
+
 
         self.label = ctk.CTkLabel(self.root, text='00:00', font=ctk.CTkFont(size=48, weight='bold'))
         self.label.pack(pady=20)
@@ -176,7 +217,17 @@ class PomodoroTimer:
 
 
     def start_timer(self):
-        pass
+
+        #Запуск таймера
+        if self.timer_core.start():
+            self.start_button.configure(state='disabled')
+            print('Таймер запущен')
+
+
+    def pause(self):
+        self.timer_core.pause()
+
+
 
     def reset_timer(self):
         pass
@@ -184,9 +235,6 @@ class PomodoroTimer:
     def run(self):
         self.root.mainloop()
 
-
-class PomodoroApp(ctk.CTk):
-    pass
 
 
 

@@ -193,7 +193,16 @@ class TimerCore:
         initial_time = self.timer_state.current_time
 
 class UIResource:
-    pass
+    def __init__(self, root):
+        self.root = root
+        self.pomodoro_color = '#ff6b6b'
+        self.short_break_color = '#51cf66'
+        self.long_break_color = '#339af0'
+
+    def create_main_frame(self):
+        main_frame = ctk.CTkFrame(self.root, corner_radius = 20)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        return main_frame
 
 class PomodoroTimer:
     def __init__(self):
@@ -206,9 +215,10 @@ class PomodoroTimer:
         self.settings = Settings()
         self.stats = Statistics()
         self.notification_manager = NotificationManager()
+        self.ui_resource = UIResource()
 
 
-        self.timer_core = TimerCore(self.timer_state, self.notification_manager)
+        self.timer_core = TimerCore(self.timer_state, self.notification_manager, self.root)
 
 
         self.label = ctk.CTkLabel(self.root, text='00:00', font=ctk.CTkFont(size=48, weight='bold'))
@@ -219,6 +229,9 @@ class PomodoroTimer:
 
         self.reset_button = ctk.CTkButton(self.root, text='Reset', command=self.reset_timer)
         self.reset_button.pack(pady=5)
+
+    def setup(self):
+        main_frame = self.ui_resource.create_main_frame()
 
 
     def start_timer(self):

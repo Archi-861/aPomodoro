@@ -278,8 +278,42 @@ class PomodoroTimer:
         self.reset_button = ctk.CTkButton(self.root, text='Reset', command=self.reset_timer)
         self.reset_button.pack(pady=5)
 
-    def update_display(self):
-        pass
+
+
+    def update_display(self, progress=1.0):
+        try:
+            self.time_label.configure(text=self.ui_resource.format_time(self.timer_state.current_time))
+            self.progress_bar.set(progress)
+
+
+            if self.timer_state.is_pomodoro_mode:
+                status_text  = 'Pomodoro'
+                color = self.ui_resource.pomodoro_color
+
+            else:
+                if self.timer_state.current_cycle == 0:
+                    status_text = 'Long break'
+                    color = self.ui_resource.long_break_color
+                else:
+                    status_text = 'Short break'
+                    color = self.ui_resource.short_break_color
+
+
+            self.progress_bar.configure(progress_color=color)
+            self.status_label.configure(text=status_text, text_color=color)
+
+
+            time_str = self.ui_resource.format_time(self.timer_state.current_time)
+            if self.timer_state.is_running:
+                self.root.title(f'{time_str} - Pomodoro')
+            else:
+                self.root.title('aPomodoro')
+
+
+        except Exception as ex:
+            print(f'Error update display: {ex}')
+
+
 
     def timer_finished(self):
         self.timer_state.is_running = False

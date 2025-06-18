@@ -246,6 +246,18 @@ class UIResource:
     def create_control_button(self):
         pass
 
+
+
+    def format_time(self, seconds):
+        if not isinstance(seconds, (int, float)):
+            seconds = 0
+        seconds = int(seconds)
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f'{minutes:02d}:{seconds:02d}'
+
+
+
 class PomodoroTimer:
     def __init__(self):
         self.root = ctk.CTk()

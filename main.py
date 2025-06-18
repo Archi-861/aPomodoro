@@ -360,14 +360,6 @@ class PomodoroTimer:
 
 
 
-
-
-
-
-
-
-
-
     def setup_ui(self):
         main_frame = self.ui_resource.create_main_frame()
         self.ui_resource.create_title(main_frame)
@@ -396,11 +388,18 @@ class PomodoroTimer:
 
     def pause(self):
         self.timer_core.pause()
+        self.start_button.configure(state='normal')
+        self.pause_button.configure(state='disabled')
 
 
 
     def reset(self):
-        pass
+        self.timer_core.reset()
+        self.start_button.configure(state='normal')
+        self.reset_button.configure(state='disabled')
+        self.update_display()
+
+
 
     def run(self):
         self.root.mainloop()

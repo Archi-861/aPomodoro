@@ -1,7 +1,7 @@
 import json
 import os.path
-from sys import int_info
-
+import winsound
+from win10toast import ToastNotifier
 import customtkinter as ctk
 from pyexpat.errors import messages
 
@@ -19,7 +19,8 @@ class Settings:
             settings = {
                 'pomodoro' : timer_state.pomodoro_time,
                 'short_break' : timer_state.short_break,
-                'long_break' : timer_state.long_break
+                'long_break' : timer_state.long_break,
+                'notification_type' : timer_state.notification_type
             }
             with open(self.settings_file, 'w', encoding='utf-8') as f:
                 json.dump(settings, f, ensure_ascii=False, indent=2)
@@ -36,6 +37,7 @@ class Settings:
                     timer_state.pomodoro_time = settings.get('pomodoro', 25 * 60)
                     timer_state.short_break = settings.get('short_break', 5 * 60)
                     timer_state.long_break = settings.get('long_break', 15 * 60)
+                    timer_state.notification_type = settings.get('notification_type', 'both')
                     timer_state.current_time = timer_state.pomodoro_time
                 return True
             except Exception as ex:
@@ -73,21 +75,35 @@ class Statistics:
 
 
 class NotificationManager:
-    pass
+    def __init__(self, root):
+        self.root = root
+        self.toaster = ToastNotifier()
+
+
+    def play_sound(self):
+        winsound.Beep(1200, 150)
+        winsound.Beep(1200, 150)
+        winsound.Beep(1200, 150)
+
+
+
+    def show_popup_notification(self, title, message, duration=3000):
+        self.toaster.show_toast(title, message, duration=duration, threaded=True)
 
 
 
 class TimerState:
     #управление состоянием таймера
     def __init__(self):
-        self.pomodoro_time = 25 * 60
-        self.short_break = 5 * 60
+        self.pomodoro_time = 0.1 * 60
+        self.short_break = 0.2 * 60
         self.long_break = 15 * 60
         self.current_time = self.pomodoro_time
         self.is_running = False
         self.is_pomodoro_mode = True
         self.completed_pomodoros = 0
         self.current_cycle = 0
+        self.notification_type = 'both'
 
     def reset_to_pomodoro(self):
 
@@ -115,7 +131,7 @@ class TimerState:
             self.reset_to_break(is_long_break=True)
             return 'Long break'
         else:
-            self.reset_to_break()
+            self.reset_to_break(is_long_break=False)
             return 'Short break'
 
     def complete_break_period(self):
@@ -162,7 +178,7 @@ class TimerCore:
         self.pause()
 
 
-        if self.timer_state.is_pomodoro_period:
+        if self.timer_state.is_pomodoro_mode:
             self.timer_state.current_time = self.timer_state.pomodoro_time
         else:
             if self.timer_state.current_cycle == 0:
@@ -186,7 +202,7 @@ class TimerCore:
             self.timer_state.current_time -= 1
 
 
-            if self.timer_state.is_pomodoro_period:
+            if self.timer_state.is_pomodoro_mode:
                 initial_time = self.timer_state.pomodoro_time
             else:
                 if self.timer_state.current_cycle == 0:
@@ -218,6 +234,9 @@ class UIResource:
         self.pomodoro_color = '#ff6b6b'
         self.short_break_color = '#51cf66'
         self.long_break_color = '#339af0'
+        self.pomodoro_circle_color = '#ff8787'
+        self.short_break_circle_color = '#69f0ae'
+        self.long_break_circle_color = '#74c0fc'
 
 
 
@@ -228,23 +247,59 @@ class UIResource:
 
 
 
-    def create_title(self):
-        pass
+    def create_title(self, parent):
+        title_label = ctk.CTkLabel(parent, text='aPomodoro', font=ctk.CTkFont(size=32, weight='bold'))
+        title_label.pack(pady=(30, 10))
+        return title_label
 
 
 
-    def create_status_label(self):
-        pass
+    def create_status_label(self, parent):
+        status_label = ctk.CTkLabel(parent, text='Pomodoro', font=ctk.CTkFont(size=20, weight='bold'), text_color=self.pomodoro_color)
+        status_label.pack(pady=(0, 20))
+        return status_label
 
 
 
-    def create_timer_display(self):
-        pass
+    def create_timer_display(self, parent, current_time):
+        progress_frame = ctk.CTkFrame(parent, width=300, height=300, corner_radius=150)
+        progress_frame.pack(pady=(0, 20))
+        progress_frame.pack_propagate(False)
+
+        time_label = ctk.CTkLabel(
+            progress_frame,
+            text=self.format_time(current_time),
+            font=ctk.CTkFont(size=48, weight='bold')
+        )
+        time_label.place(relx=0.5, rely=0.5, anchor='center')
+
+        progress_bar = ctk.CTkProgressBar(
+            parent,
+            width=400,
+            height=20,
+            corner_radius=10
+        )
+        progress_bar.pack(pady=(0, 30))
+        progress_bar.set(1.0)
+
+        return progress_frame, time_label, progress_bar
 
 
 
-    def create_control_button(self):
-        pass
+    def create_control_button(self, parent):
+        button_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        button_frame.pack(pady=(0, 30))
+
+        start_button = ctk.CTkButton(button_frame, text='▶ Start', width=120, height=50, font=ctk.CTkFont(size=16, weight='bold'), corner_radius=25)
+        start_button.pack(side='left', padx=10)
+
+        pause_button = ctk.CTkButton(button_frame, text='⏸ Pause', width=120, height=50, font=ctk.CTkFont(size=16, weight='bold'), corner_radius=25)
+        pause_button.pack(side='left', padx=10)
+
+        reset_button = ctk.CTkButton(button_frame, text='Reset', width=120, height=50, font=ctk.CTkFont(size=16, weight='bold'), corner_radius=25)
+        reset_button.pack(side='left', padx=10)
+
+        return start_button, pause_button, reset_button
 
 
 
@@ -268,7 +323,7 @@ class PomodoroTimer:
         self.timer_state = TimerState()
         self.settings = Settings()
         self.stats = Statistics()
-        self.notification_manager = NotificationManager()
+        self.notification_manager = NotificationManager(self.root)
         self.ui_resource = UIResource(self.root)
 
 
@@ -281,16 +336,6 @@ class PomodoroTimer:
         self.setup_ui()
 
 
-        self.label = ctk.CTkLabel(self.root, text='00:00', font=ctk.CTkFont(size=48, weight='bold'))
-        self.label.pack(pady=20)
-
-        self.start_button = ctk.CTkButton(self.root, text='Start', command=self.start_timer)
-        self.start_button.pack(pady=10)
-
-        self.reset_button = ctk.CTkButton(self.root, text='Reset', command=self.reset_timer)
-        self.reset_button.pack(pady=5)
-
-
 
     def update_display(self, progress=1.0):
         try:
@@ -299,7 +344,7 @@ class PomodoroTimer:
 
 
             if self.timer_state.is_pomodoro_mode:
-                status_text  = 'Pomodoro'
+                status_text  = 'aPomodoro'
                 color = self.ui_resource.pomodoro_color
 
             else:
@@ -310,6 +355,12 @@ class PomodoroTimer:
                     status_text = 'Short break'
                     color = self.ui_resource.short_break_color
 
+            if self.timer_state.is_pomodoro_mode:
+                self.progress_frame.configure(fg_color=self.ui_resource.pomodoro_circle_color)
+            elif self.timer_state.current_cycle == 0:
+                self.progress_frame.configure(fg_color=self.ui_resource.long_break_circle_color)
+            else:
+                self.progress_frame.configure(fg_color=self.ui_resource.short_break_circle_color)
 
             self.progress_bar.configure(progress_color=color)
             self.status_label.configure(text=status_text, text_color=color)
@@ -317,7 +368,7 @@ class PomodoroTimer:
 
             time_str = self.ui_resource.format_time(self.timer_state.current_time)
             if self.timer_state.is_running:
-                self.root.title(f'{time_str} - Pomodoro')
+                self.root.title(f'{time_str} - aPomodoro')
             else:
                 self.root.title('aPomodoro')
 
@@ -353,10 +404,15 @@ class PomodoroTimer:
             color = self.ui_resource.pomodoro_color
 
 
+        notification = self.timer_state.notification_type
+        if notification in ['sound', 'both']:
+            self.notification_manager.play_sound()
 
-        #Добавить уведомления
+        if notification in ['popup', 'both']:
+            self.notification_manager.show_popup_notification(title, message, color=color)
 
         self.update_display()
+        self.start()
 
 
 
@@ -367,7 +423,7 @@ class PomodoroTimer:
         self.progress_frame, self.time_label, self.progress_bar = self.ui_resource.create_timer_display(main_frame, self.timer_state.current_time)
 
 
-        self.start_button, self.pause_button, self.reset_button = self.ui_resource.create_control_button
+        self.start_button, self.pause_button, self.reset_button = self.ui_resource.create_control_button(main_frame)
         self.start_button.configure(command=self.start)
         self.pause_button.configure(command=self.pause)
         self.reset_button.configure(command=self.reset)

@@ -137,6 +137,8 @@ class TimerCore:
         self.root = root
         self.timer_after = None
 
+
+
     def start(self):
         if not self.timer_state.is_running:
             self.timer_state.is_running = True
@@ -144,15 +146,22 @@ class TimerCore:
             return True
         return False
 
+
+
     def pause(self):
         self.timer_state.is_running = False
+
+
         if self.timer_after:
             self.root.after_cancel(self.timer_after)
             self.timer_after = None
 
 
+
     def reset(self):
         self.pause()
+
+
         if self.timer_state.is_pomodoro_period:
             self.timer_state.current_time = self.timer_state.pomodoro_time
         else:
@@ -162,14 +171,20 @@ class TimerCore:
                 self.timer_state.current_time = self.timer_state.short_break
 
 
+        self.update_callback() #маркер GUI
+
+
 
     def next_action_tick(self):
         if self.timer_state.is_running:
             self.timer_after = self.root.after(1000, self.one_second_tick)
 
+
+
     def one_second_tick(self):
         if self.timer_state.is_running and self.timer_state.current_time > 0:
             self.timer_state.current_time -= 1
+
 
             if self.timer_state.is_pomodoro_period:
                 initial_time = self.timer_state.pomodoro_time
@@ -178,19 +193,24 @@ class TimerCore:
                     initial_time = self.timer_state.long_break
                 else:
                     initial_time = self.timer_state.short_break
+
+
             progress = self.timer_state.current_time / initial_time if initial_time > 0 else 0.0
-            self.update_callback(progress)
+            self.update_callback(progress) #маркер GUI по прогрессу
+
 
             if self.timer_state.current_time > 0:
                 self.next_action_tick()
             else:
                 self.timer_state.is_running = False
-                self.finish_callback()
+                self.finish_callback() #маркер GUI по завершению таймера
 
 
 
     def run(self):
         initial_time = self.timer_state.current_time
+
+
 
 class UIResource:
     def __init__(self, root):
@@ -199,10 +219,32 @@ class UIResource:
         self.short_break_color = '#51cf66'
         self.long_break_color = '#339af0'
 
+
+
     def create_main_frame(self):
         main_frame = ctk.CTkFrame(self.root, corner_radius = 20)
         main_frame.pack(fill='both', expand=True, padx=20, pady=20)
         return main_frame
+
+
+
+    def create_title(self):
+        pass
+
+
+
+    def create_status_label(self):
+        pass
+
+
+
+    def create_timer_display(self):
+        pass
+
+
+
+    def create_control_button(self):
+        pass
 
 class PomodoroTimer:
     def __init__(self):
@@ -215,10 +257,16 @@ class PomodoroTimer:
         self.settings = Settings()
         self.stats = Statistics()
         self.notification_manager = NotificationManager()
-        self.ui_resource = UIResource()
+        self.ui_resource = UIResource(self.root)
 
 
-        self.timer_core = TimerCore(self.timer_state, self.notification_manager, self.root)
+        self.settings.load_setting(self.timer_state)
+
+
+        self.timer_core = TimerCore(self.timer_state, self.notification_manager, self.update_display, self.timer_finished, self.root)
+
+
+        self.setup_ui()
 
 
         self.label = ctk.CTkLabel(self.root, text='00:00', font=ctk.CTkFont(size=48, weight='bold'))
@@ -230,16 +278,38 @@ class PomodoroTimer:
         self.reset_button = ctk.CTkButton(self.root, text='Reset', command=self.reset_timer)
         self.reset_button.pack(pady=5)
 
-    def setup(self):
+    def update_display(self):
+        pass
+
+    def timer_finished(self):
+        pass
+
+
+
+    def setup_ui(self):
         main_frame = self.ui_resource.create_main_frame()
+        self.ui_resource.create_title(main_frame)
+        self.status_label = self.ui_resource.create_status_label(main_frame)
+        self.progress_frame, self.time_label, self.progress_bar = self.ui_resource.create_timer_display(main_frame, self.timer_state.current_time)
 
 
-    def start_timer(self):
+        self.start_button, self.pause_button, self.reset_button = self.ui_resource.create_control_button
+        self.start_button.configure(command=self.start)
+        self.pause_button.configure(command=self.pause)
+        self.reset_button.configure(command=self.reset)
 
+    #Добавить панель настроек и панель статистики
+
+        self.update_display()
+
+
+
+    def start(self):
         #Запуск таймера
         if self.timer_core.start():
             self.start_button.configure(state='disabled')
-            print('Таймер запущен')
+            self.pause_button.configure(state='normal')
+
 
 
     def pause(self):
@@ -247,7 +317,7 @@ class PomodoroTimer:
 
 
 
-    def reset_timer(self):
+    def reset(self):
         pass
 
     def run(self):

@@ -3,7 +3,7 @@ import os.path
 from sys import int_info
 
 import customtkinter as ctk
-
+from pyexpat.errors import messages
 
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme('blue')
@@ -282,7 +282,43 @@ class PomodoroTimer:
         pass
 
     def timer_finished(self):
-        pass
+        self.timer_state.is_running = False
+
+        self.start_button.configure(state='normal')
+        self.pause_button.configure(state='disabled')
+
+        if self.timer_state.is_pomodoro_mode:
+            next_period = self.timer_state.complete_pomodoro_period()
+            #Добавить занесение в статистику
+
+            if next_period == 'Long_break':
+                title = 'The cycle is completed!'
+                message = 'Long break'
+                color = self.ui_resource.long_break_color
+            else:
+                title = 'The pomodoro is completed!'
+                message = 'Short break'
+                color = self.ui_resource.short_break_color
+
+        else:
+            self.timer_state.complete_break_period()
+            title = 'The break is over'
+            message = 'Pomodoro'
+            color = self.ui_resource.pomodoro_color
+
+
+
+        #Добавить уведомления
+
+        self.update_display()
+
+
+
+
+
+
+
+
 
 
 

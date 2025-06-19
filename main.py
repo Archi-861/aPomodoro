@@ -3,7 +3,8 @@ import os.path
 import winsound
 from win10toast import ToastNotifier
 import customtkinter as ctk
-from pyexpat.errors import messages
+from PIL import Image
+
 
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme('blue')
@@ -44,6 +45,72 @@ class Settings:
                 print(f'Error loading {ex}')
                 return False
         return False
+
+
+
+class MenuManager:
+    def __init__(self, root, settings):
+        self.root = root
+        self.settings = settings
+        self.create_menu()
+
+
+    def create_menu(self):
+        menu = ctk.CTkFrame(self.root)
+        menu.pack(side='top', fill='x', pady=(5, 10))
+
+        title_label = ctk.CTkLabel(menu, text='aPomodoro', font=ctk.CTkFont(size=20, weight='bold'))
+        title_label.pack(side='left', padx=10)
+
+        about_icon = ctk.CTkImage(light_image=Image.open('icons/about.png'), size=(20, 20))
+        statistics_icon = ctk.CTkImage(light_image=Image.open('icons/statistics.png'), size=(20,20))
+        settings_icon = ctk.CTkImage(light_image=Image.open('icons/settings.png'),  size=(20, 20))
+
+        about_button = ctk.CTkButton(menu, text='', image=about_icon, command=self.show_about, width=80)
+        about_button.pack(side='right', padx=(0, 10))
+
+        settings_button = ctk.CTkButton(menu, text='',image=settings_icon, command=self.show_settings, width=80)
+        settings_button.pack(side='right', padx=(0, 10))
+
+        statistic_button = ctk.CTkButton(menu, text='', image=statistics_icon, command=self.show_statistics, width=80)
+        statistic_button.pack(side='right', padx=(0, 10))
+
+
+
+    def show_about(self):
+        about_window = ctk.CTkToplevel(self.root)
+        about_window.title('About')
+        about_window.geometry('400x300')
+        about_window.transient(self.root)
+        about_window.grab_set()
+
+        title = ctk.CTkLabel(about_window, text='Pomodoro Timer', font=ctk.CTkFont(size=24, weight='bold'))
+        title.pack(pady=20)
+
+        info_text = """
+        Техника Помодоро - это метод управления временем,
+        разработанный Франческо Чирилло в конце 1980-х годов.
+
+        Принцип работы:
+        • 25 минут работы
+        • 5 минут короткий перерыв
+        • После 4 циклов - длинный перерыв (15 минут)
+
+        Версия: 2.0
+        Создано с использованием CustomTkinter
+        """
+
+        info_label = ctk.CTkLabel(about_window, text=info_text, font=ctk.CTkFont(size=12), justify='left')
+        info_label.pack(pady=20, padx=20)
+
+        close_btn = ctk.CTkButton(about_window, text='Close', command=about_window.destroy, width=100)
+        close_btn.pack(pady=20)
+
+    def show_statistics(self):
+        pass
+
+    def show_settings(self):
+        pass
 
 
 
@@ -317,11 +384,12 @@ class PomodoroTimer:
     def __init__(self):
         self.root = ctk.CTk()
         self.root.title('aPomodoro')
-        self.root.geometry('500x600')
+        self.root.geometry('600x700')
 
 
         self.timer_state = TimerState()
         self.settings = Settings()
+        self.menu_manager = MenuManager(self.root, self.settings)
         self.stats = Statistics()
         self.notification_manager = NotificationManager(self.root)
         self.ui_resource = UIResource(self.root)

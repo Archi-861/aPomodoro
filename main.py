@@ -3,6 +3,8 @@ import os.path
 import winsound
 from win10toast import ToastNotifier
 import customtkinter as ctk
+import tkinter as tk
+from tkinter import messagebox
 from PIL import Image
 
 
@@ -47,11 +49,101 @@ class Settings:
         return False
 
 
+class SettingManager:
+    def __init__(self, parent, timer_state):
+        self.parent = parent
+        self.timer_state = timer_state
+        self.pomodoro_duration = tk.StringVar()
+        self.short_break_duration = tk.StringVar()
+        self.long_break_duration = tk.StringVar()
+        self.notification_var = tk.StringVar(value=timer_state.notification_type)
+
+    def create_setting_panel(self):
+        self.pomodoro_duration.set(str(int(self.timer_state.pomodoro_time // 60)))
+        self.short_break_duration.set(str(int(self.timer_state.short_break // 60)))
+        self.long_break_duration.set(str(int(self.timer_state.long_break // 60)))
+
+        settings_frame = ctk.CTkFrame(self.parent, corner_radius=15)
+        settings_frame.pack(fill='x', padx=20, pady=20)
+
+        title = ctk.CTkLabel(settings_frame, text='Settings', font=ctk.CTkFont(size=18, weight='bold'))
+        title.pack(pady=(15, 10))
+
+        row_1 = ctk.CTkFrame(settings_frame)
+        row_1.pack(fill='x', pady=5, padx=10)
+        ctk.CTkLabel(row_1, text='Pomodoro (min):').pack(side='left', padx=10)
+        ctk.CTkEntry(row_1, textvariable=self.pomodoro_duration, width=100).pack(side='right', padx=10)
+
+        row_2 = ctk.CTkFrame(settings_frame)
+        row_2.pack(fill='x', pady=5, padx=10)
+        ctk.CTkLabel(row_2, text='Short break (min):').pack(side='left', padx=10)
+        ctk.CTkEntry(row_2, textvariable=self.short_break_duration, width=100).pack(side='right', padx=10)
+
+        row_3 = ctk.CTkFrame(settings_frame)
+        row_3.pack(fill='x', pady=5, padx=10)
+        ctk.CTkLabel(row_3, text='Long break (min):').pack(side='left', padx=10)
+        ctk.CTkEntry(row_3, textvariable=self.long_break_duration, width=100).pack(side='right', padx=10)
+
+        row_4 = ctk.CTkFrame(settings_frame)
+        row_4.pack(fill='x', pady=5, padx=10)
+        ctk.CTkLabel(row_4, text='Notification:').pack(side='left', padx=10)
+        ctk.CTkOptionMenu(row_4, variable=self.notification_var, values=['sound', 'popup', 'both']).pack(side='right', padx=10)
+
+        apply_button = ctk.CTkButton(settings_frame, text='Apply', height=40, corner_radius=20, command=self.apply_settings)
+        apply_button.pack(pady=15)
+
+        return apply_button
+
+    def apply_settings(self):
+        try:
+            new_pomodoro_duration = int(self.pomodoro_duration.get()) * 60
+            new_short_break_duration = int(self.short_break_duration.get()) * 60
+            new_long_break_duration = int(self.long_break_duration.get()) * 60
+            notification = self.notification_var.get()
+
+            if new_pomodoro_duration > 0 and new_short_break_duration > 0 and new_long_break_duration > 0:
+                old_pomodoro = self.timer_state.pomodoro_time
+                old_short_break = self.timer_state.short_break
+                old_long_break = self.timer_state.long_break
+
+                self.timer_state.pomodoro_time = new_pomodoro_duration
+                self.timer_state.short_break = new_short_break_duration
+                self.timer_state.long_break = new_long_break_duration
+                self.timer_state.notification_type = notification
+
+                if not self.timer_state.is_running:
+                    if self.timer_state.is_pomodoro_mode and old_pomodoro != new_pomodoro_duration:
+                        self.timer_state.current_time = new_pomodoro_duration
+                    elif not self.timer_state.is_pomodoro_mode:
+                        if self.timer_state.current_cycle == 0 and old_long_break != new_long_break_duration:
+                            self.timer_state.current_time = new_long_break_duration
+                        elif self.timer_state.current_cycle != 0 and old_short_break != new_short_break_duration:
+                            self.timer_state.current_time = new_short_break_duration
+
+                settings = Settings()
+                if settings.save_settings(self.timer_state):
+                    messagebox.showinfo('Success', 'Settings applied successfully!')
+                    self.parent.destroy()
+                    return True
+                else:
+                    messagebox.showerror('Error', 'Failed to save settings')
+                    return False
+            else:
+                raise ValueError('All values must be greater than 0!')
+
+        except ValueError as ex:
+            messagebox.showerror('Error', f'Invalid values: {ex}')
+            return False
+
+
+
+
 
 class MenuManager:
-    def __init__(self, root, settings):
+    def __init__(self, root, settings, timer_state):
         self.root = root
         self.settings = settings
+        self.timer_state = timer_state
         self.create_menu()
 
 
@@ -106,11 +198,30 @@ class MenuManager:
         close_btn = ctk.CTkButton(about_window, text='Close', command=about_window.destroy, width=100)
         close_btn.pack(pady=20)
 
+    def show_settings(self):
+        window = ctk.CTkToplevel(self.root)
+        window.title('Settings')
+        window.geometry('360x350')
+        window.transient(self.root)
+        window.grab_set()
+
+        manager = SettingManager(window, self.timer_state)
+        apply_button = manager.create_setting_panel()
+        original_apply = manager.apply_settings
+
+        def apply_with_update():
+            if original_apply():
+                if hasattr(self.root, 'update_display_callback'):
+                    self.root.update_display_callback()
+
+        manager.apply_settings = apply_with_update
+
+
+
     def show_statistics(self):
         pass
 
-    def show_settings(self):
-        pass
+
 
 
 
@@ -389,10 +500,11 @@ class PomodoroTimer:
 
         self.timer_state = TimerState()
         self.settings = Settings()
-        self.menu_manager = MenuManager(self.root, self.settings)
+        self.menu_manager = MenuManager(self.root, self.settings, self.timer_state)
         self.stats = Statistics()
         self.notification_manager = NotificationManager(self.root)
         self.ui_resource = UIResource(self.root)
+        self.root.update_display_callback = self.update_display
 
 
         self.settings.load_setting(self.timer_state)

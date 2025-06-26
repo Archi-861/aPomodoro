@@ -1,0 +1,38 @@
+{
+  "2025-06-22": {
+    "completed_pomodoros": 3,
+    "total_work_time": 80,
+    "sessions": [
+      {
+        "timestamp": "21:08:53",
+        "duration": 60
+      },
+      {
+        "timestamp": "21:14:42",
+        "duration": 10
+      },
+      {
+        "timestamp": "21:16:06",
+        "duration": 10
+      }
+    ]
+  },
+  "2025-06-26": {
+    "completed_pomodoros": 3,
+    "total_work_time": 30,
+    "sessions": [
+      {
+        "timestamp": "15:42:27",
+        "duration": 10
+      },
+      {
+        "timestamp": "15:43:28",
+        "duration": 10
+      },
+      {
+        "timestamp": "15:43:50",
+        "duration": 10
+      }
+    ]
+  }
+}

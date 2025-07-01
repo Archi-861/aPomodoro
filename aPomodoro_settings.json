@@ -1,11 +1,9 @@
 {
-  "pomodoro_time": 1500,
-  "short_break": 300,
-  "long_break": 900,
+  "pomodoro_time": 60,
+  "short_break_time": 60,
+  "long_break_time": 900,
   "notification_type": "both",
-  "pomodoro_sound": "bonus_1",
-  "short_break_sound": "soft_bell",
-  "long_break_sound": "bell",
-  "auto_start_breaks": true,
-  "auto_start_pomodoros": true
+  "pomodoro_sound": "soft_bell",
+  "short_break_sound": "notification",
+  "long_break_sound": "soft_bell"
 }

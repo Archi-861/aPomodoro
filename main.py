@@ -21,6 +21,12 @@ class PomodoroApp:
         self.sound_manager = SoundManager()
         self.settings_manager = SettingsManager()
         self.stats_manager = StatsManager()
+
+        try:
+            self.stats_manager.get_general_stats()
+        except Exception:
+            self.stats_manager.repair_stats_file()
+
         self.timer_job = None
         self.colors = {
             'pomodoro': {'text': '#ff0505', 'circle': '#ff0505'},
@@ -187,18 +193,31 @@ class PomodoroApp:
         self.timer_state.is_running = False
         self.start_btn.configure(state='normal')
         self.pause_btn.configure(state='disabled')
+
         if self.timer_state.is_pomodoro_mode:
+            completed_mode = 'pomodoro'
             self.stats_manager.save_completed_pomodoro(self.timer_state.pomodoro_time)
+        else:
+            if self.timer_state.cycle_count == 0:
+                completed_mode = 'long_break'
+            else:
+                completed_mode = 'short_break'
+
+        self.sound_manager.handle_timer_finished(self.timer_state, completed_mode)
+
         next_period = self.timer_state.next_period()
-        self.sound_manager.handle_timer_finished(self.timer_state, next_period)
         self.update_display()
+        self.root.after(2000, self.auto_start_next)
+
+
+
+    def auto_start_next(self):
         self.start_timer()
 
 
 
     def show_about(self):
         UIWindows.show_about(self.root)
-
 
 
 
@@ -213,7 +232,16 @@ class PomodoroApp:
 
 
     def show_stats(self):
-        UIWindows.show_stats(self.root, self.stats_manager)
+        try:
+            UIWindows.show_stats(self.root, self.stats_manager)
+        except Exception as e:
+            self.stats_manager.repair_stats_file()
+            try:
+                UIWindows.show_stats(self.root, self.stats_manager)
+            except Exception:
+                import tkinter.messagebox as messagebox
+                messagebox.showerror("Error", "Couldn't load statistics.\nThe statistics file will be reset..")
+                self.stats_manager.reset_stats()
 
 
 
@@ -233,7 +261,6 @@ class PomodoroApp:
             self.root.mainloop()
         except KeyboardInterrupt:
             self.on_closing()
-
 
 
 if __name__ == '__main__':

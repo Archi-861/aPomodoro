@@ -1,16 +1,1 @@
-{
-  "2025-06-30": {
-    "completed_pomodoros": 2,
-    "total_work_time": 120,
-    "sessions": [
-      {
-        "timestamp": "12:51:51",
-        "duration": 60
-      },
-      {
-        "timestamp": "13:00:02",
-        "duration": 60
-      }
-    ]
-  }
-}
+{}

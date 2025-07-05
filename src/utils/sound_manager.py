@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 
+
 class SoundManager:
     def __init__(self):
         pygame.mixer.init()
@@ -17,30 +18,49 @@ class SoundManager:
 
     def load_sound(self, filename):
         path = self.resource_path(filename)
-        print(f"[DEBUG] Loading sound from: {path}")  # временно для отладки
-        return pygame.mixer.Sound(path)
+        try:
+            return pygame.mixer.Sound(path)
+        except pygame.error:
+            return None
+
+
 
     def resource_path(self, relative_path):
         try:
             base_path = sys._MEIPASS
         except AttributeError:
-            # Поднимаемся до корня проекта из src/utils/
             base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         return os.path.join(base_path, relative_path)
+
+
 
     def play_sound(self, key):
         sound = self.sounds.get(key)
         if sound:
-            sound.play()
+            try:
+                sound.play()
+            except pygame.error:
+                pass
 
-    def handle_timer_finished(self, timer_state, next_mode):
+
+    def handle_timer_finished(self, timer_state, completed_mode):
         if timer_state.notification_type in ('sound', 'both'):
-            if timer_state.is_pomodoro_mode:
-                self.play_sound(timer_state.pomodoro_sound)
-            elif timer_state.cycle_count == 0:
-                self.play_sound(timer_state.long_break_sound)
-            else:
-                self.play_sound(timer_state.short_break_sound)
+            if completed_mode == 'pomodoro':
+                sound_key = timer_state.pomodoro_sound
+                self.play_sound(sound_key)
+
+            elif completed_mode == 'short_break':
+                sound_key = timer_state.short_break_sound
+                self.play_sound(sound_key)
+
+            elif completed_mode == 'long_break':
+                sound_key = timer_state.long_break_sound
+                self.play_sound(sound_key)
+
+
 
     def cleanup(self):
-        pygame.mixer.quit()
+        try:
+            pygame.mixer.quit()
+        except Exception:
+            pass
